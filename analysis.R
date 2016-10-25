@@ -10,10 +10,14 @@ if(!require(ggplot2)){
 if(!require(scales)){
   install.packages("scales")
 }
+if(!require(dplyr)){
+  install.packages("dplyr")
+}
 library(xlsx)
 library(Cairo)
 library(ggplot2)
 library(scales)
+library(dplyr)
 
 data <- read.csv(file = "data/data.csv", header = T, sep = ";", stringsAsFactors = F)
 
@@ -64,12 +68,16 @@ Cairo(file=name,
       pointsize=12*2, 
       dpi=144)
 
+# sorting by attribute
+data <- arrange(data, CATEGORY, final_case_type)
+
 ggplot(data, aes(CATEGORY)) +
   geom_bar(aes(y = (..count..)/sum(..count..), fill = CATEGORY), stat="count") +
   geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
                  y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
   labs(x = "Category" ,y = "Percent", fill="Category") +
-  scale_y_continuous(labels=percent)
+  scale_y_continuous(labels=percent) +
+  + coord_flip(CATEGORY) 
 
 dev.off()
 
@@ -82,11 +90,14 @@ Cairo(file=name,
       pointsize=12*2, 
       dpi=144)
 
-ggplot(data, aes(CALL.GROUPS)) +
-  geom_bar(aes(y = (..count..)/sum(..count..), fill = CALL.GROUPS), stat="count") +
+# sorting by attribute
+data <- arrange(data, CALL.GROUPS, final_case_type)
+
+ggplot(data, aes(CATEGORY)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = CATEGORY), stat="count") +
   geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
                  y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
-  labs(x = "Call Groups" ,y = "Percent", fill="Call Groups") +
+  labs(x = "Category" ,y = "Percent", fill="Category") +
   scale_y_continuous(labels=percent)
 
 dev.off()
@@ -99,6 +110,9 @@ Cairo(file=name,
       height=4*10, 
       pointsize=12*6, 
       dpi=144)
+
+# sorting by attribute
+data <- arrange(data, final_case_type, CATEGORY)
 
 ggplot(data, aes(final_case_type)) +
   geom_bar(aes(y = (..count..)/sum(..count..), fill = final_case_type), stat="count") +
@@ -118,6 +132,9 @@ Cairo(file=name,
       pointsize=12*10, 
       dpi=144)
 
+# sorting by attribute
+data <- arrange(data, census_tract, final_case_type)
+
 ggplot(data, aes(as.character(census_tract))) +
   geom_bar(aes(y = (..count..)/sum(..count..), fill = as.character(census_tract)), stat="count") +
   geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
@@ -134,6 +151,3 @@ ct_10600_dt_2016 <- subset(data, census_tract == 10600 & strftime(occ_date, form
 
 write.xlsx(ct_980000_dt_2016, "data/ct_980000_dt_2016.xlsx") 
 write.xlsx(ct_10600_dt_2016, "data/ct_10600_dt_2016.xlsx") 
-
-ggplot(ct_980000_dt_2016, aes(CATEGORY, ..count..)) + geom_bar(aes(fill = CATEGORY), position = "dodge")
-
