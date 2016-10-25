@@ -76,8 +76,7 @@ ggplot(data, aes(CATEGORY)) +
   geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
                  y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
   labs(x = "Category" ,y = "Percent", fill="Category") +
-  scale_y_continuous(labels=percent) +
-  + coord_flip(CATEGORY) 
+  scale_y_continuous(labels=percent)
 
 dev.off()
 
@@ -97,7 +96,7 @@ ggplot(data, aes(CATEGORY)) +
   geom_bar(aes(y = (..count..)/sum(..count..), fill = CATEGORY), stat="count") +
   geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
                  y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
-  labs(x = "Category" ,y = "Percent", fill="Category") +
+  labs(x = "Call Groups" ,y = "Percent", fill="Call Groups") +
   scale_y_continuous(labels=percent)
 
 dev.off()
