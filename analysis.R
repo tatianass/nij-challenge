@@ -63,7 +63,14 @@ Cairo(file=name,
       height=4*2, 
       pointsize=12*2, 
       dpi=144)
-ggplot(data, aes(CATEGORY, ..count..)) + geom_bar(aes(fill = CATEGORY), position = "dodge")
+
+ggplot(data, aes(CATEGORY)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = CATEGORY), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Category" ,y = "Percent", fill="Category") +
+  scale_y_continuous(labels=percent)
+
 dev.off()
 
 name <- paste(graphic, call)
@@ -74,48 +81,50 @@ Cairo(file=name,
       height=4*2, 
       pointsize=12*2, 
       dpi=144)
-ggplot(data, aes(CALL.GROUPS, ..count..)) + geom_bar(aes(fill = CALL.GROUPS), position = "dodge")
+
+ggplot(data, aes(CALL.GROUPS)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = CALL.GROUPS), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Call Groups" ,y = "Percent", fill="Call Groups") +
+  scale_y_continuous(labels=percent)
+
 dev.off()
 
 name <- paste(graphic, final)
 Cairo(file=name, 
       type="png",
       units="in", 
-      width=5*2, 
-      height=4*2, 
-      pointsize=12*2, 
+      width=5*10, 
+      height=4*10, 
+      pointsize=12*6, 
       dpi=144)
-ggplot(data, aes(final_case_type, ..count..)) + geom_bar(aes(fill = final_case_type), position = "dodge")
-dev.off()
 
-ggplot(data, aes(x= test2,  group=test1)) + 
-  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
-  geom_text(aes(label = ..count.., y= ..prop..), stat= "count", vjust = -.5) +
-  labs(y = "Percent", fill="test2") +
-  facet_grid(~test1) +
+ggplot(data, aes(final_case_type)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = final_case_type), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Final Case" ,y = "Percent", fill="Final Case") +
   scale_y_continuous(labels=percent)
 
-
-name <- paste(graphic, case)
-Cairo(file=name, 
-      type="png",
-      units="in", 
-      width=5*2, 
-      height=4*2, 
-      pointsize=12*2, 
-      dpi=144)
-ggplot(data, aes(CASE.DESC, ..count..)) + geom_bar(aes(fill = CASE.DESC), position = "dodge")
 dev.off()
 
 name <- paste(graphic, census)
 Cairo(file=name, 
       type="png",
       units="in", 
-      width=5*2, 
-      height=4*2, 
-      pointsize=12*2, 
+      width=5*14, 
+      height=4*14, 
+      pointsize=12*10, 
       dpi=144)
-ggplot(data, aes(census_tract, ..count..)) + geom_bar(aes(fill = census_tract), position = "dodge")
+
+ggplot(data, aes(as.character(census_tract))) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = as.character(census_tract)), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Census Tract" ,y = "Percent", fill="Census Tract") +
+  scale_y_continuous(labels=percent)
+
 dev.off()
 
 ## looking if census_tract has something to do with crime's location (analysing with arcgis)
