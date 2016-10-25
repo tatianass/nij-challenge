@@ -77,3 +77,7 @@ dev.off()
 aov_category <- lm(as.numeric(data$occ_date)~CATEGORY,data=data)
 
 anova_fun(aov_category, "analyse/type")
+
+library(foreign)
+##dbf
+d <- read.dbf("C:/Users/tatiana/Documents/tutorial - arcgis/Join_Output_2.dbf", as.is = FALSE)

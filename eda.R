@@ -45,3 +45,126 @@ str(iris)
 head(iris)
 boxplot(iris$Sepal.Length ~ iris$Species)
 boxplot(iris$Sepal.Length ~ iris$Species, main = "Petal Length")
+boxplot(iris$Sepal.Length ~ iris$Species, main = "Petal Length", xlab = "Species", ylab = "Petal Length", col = "red")
+# colors()
+
+# To change background of the plot
+par(bg="green")
+boxplot(iris$Sepal.Length ~ iris$Species, main = "Petal Length", xlab = "Species", ylab = "Petal Length", col = "red")
+
+## box plot in lattice package
+library(lattice)
+bwplot(iris$Sepal.Length ~ iris$Species)
+bwplot(iris$Sepal.Length ~ iris$Species, main = "Petal Length")
+xyplot(iris$Sepal.Length ~ iris$Species)
+xyplot(iris$Sepal.Length ~ iris$Species, main = "Petal Length", col = "red", pch=2)
+
+## box plot in ggplot2 package
+if(!require(ggplot2)){
+  install.packages("ggplot2")
+}
+library(ggplot2)
+qplot(iris$Species,iris$Sepal.Length, data=iris, geom="boxplot")
+
+## Summary function for numeric value & categorical
+summary(iris)
+data(mtcars)
+str(mtcars)
+summary(mtcars)
+boxplot(mtcars)
+
+## Compation of mpg & cyl
+boxplot(mtcars$mpg~mtcars$cyl, xlab = "mpg", ylab = "cyl")
+
+# Describe function
+if(!require(Hmisc)){
+  install.packages("Hmisc")
+}
+library(Hmisc)
+# used to missing values
+describe(mtcars)
+describe(mtcars$mpg)
+
+# slice & dice of dataset
+A1 <- summarize(mtcars$mpg, mtcars$cyl, summary)
+A1
+
+A2 <- summarize(mtcars$mpg, mtcars$gear, summary)
+A2
+
+A3 <- summarize(mtcars$mpg, mtcars$gear, mean)
+A3
+
+##https://www.r-bloggers.com/exploratory-data-analysis-quantile-quantile-plots-for-new-yorks-ozone-pollution-data/
+##### Quantile-Quantile Plots of Ozone Pollution Data
+##### By Eric Cai - The Chemical Statistician
+# clear all variables
+rm(list = ls(all.names = TRUE))
+
+# view first 6 entries of the "Ozone" data frame 
+head(airquality)
+
+# extract "Ozone" data vector
+ozone = airquality$Ozone
+
+# sample size of "ozone"
+length(ozone)
+
+# summary of "ozone"
+summary(ozone)
+
+# remove missing values from "ozone"
+ozone = ozone[!is.na(ozone)]
+
+# having removed missing values, find the number of non-missing values in "ozone"
+n = length(ozone)
+
+# calculate mean, variance and standard deviation of "ozone"
+mean.ozone = mean(ozone)
+var.ozone = var(ozone)
+sd.ozone = sd(ozone)
+max.ozone = max(ozone, na.rm = T)
+
+# set n points in the interval (0,1)
+# use the formula k/(n+1), for k = 1,..,n
+# this is a vector of the n probabilities
+probabilities = (1:n)/(n+1)
+
+# calculate normal quantiles using mean and standard deviation from "ozone"
+normal.quantiles = qnorm(probabilities, mean(ozone, na.rm = T), sd(ozone, na.rm = T))
+
+# normal quantile-quantile plot for "ozone"
+png('analyse/normal-qqplot.png')
+plot(sort(normal.quantiles), sort(ozone) , xlab = 'Theoretical Quantiles from Normal Distribution', ylab = 'Sample Quqnatiles of Ozone', main = 'Normal Quantile-Quantile Plot of Ozone')
+abline(0,1)
+dev.off()
+
+# calculate gamma quantiles using mean and standard deviation from "ozone" to calculate shape and scale parameters
+gamma.quantiles = qgamma(probabilities, shape = mean.ozone^2/var.ozone, scale = var.ozone/mean.ozone)
+
+
+# gamma quantile-quantile plot for "ozone"
+png('analyse/gamma-qqplot.png')
+plot(sort(gamma.quantiles), sort(ozone), xlab = 'Theoretical Quantiles from Gamma Distribution', ylab = 'Sample Quantiles of Ozone', main = 'Gamma Quantile-Quantile Plot of Ozone')
+abline(0,1)
+dev.off()
+
+# histogram with kernel density estimate
+png('analyse/histogram and kernel density plot.png')
+hist(ozone, breaks = 15, freq = F, xlab = 'Ozone (ppb)', ylim = c(0, 0.025), ylab = 'Probability', main = 'Histogram of Ozone Pollution Data with Kernel Density Plot')
+lines(density(ozone, na.rm = T, from = 0, to = max.ozone))
+dev.off()
+
+# histogram with normal density curve
+png('analyse/histogram and gamma density plot.png')
+hist(ozone, breaks = 15, freq = F, xlim = c(0, 170), ylim = c(0, 0.025), xlab = 'Ozone (ppb)', ylab = 'Relative Frequency', main = 'Histogram of Ozone Pollution Data with Gamma Density Curve')
+curve(dgamma(x, shape = mean.ozone^2/var.ozone, scale = var.ozone/mean.ozone), add = T)
+dev.off()
+
+# histogram with normal density curve
+png('analyse/histogram and normal density plot.png')
+ozone.histogram = hist(ozone, breaks = 50, freq = F)
+ozone.ylim.normal = range(0, ozone.histogram$density, dnorm(ozone, mean = mean.ozone, sd = sd.ozone), na.rm = T)
+hist(ozone, breaks = 15, freq = F, ylim = c(0, 0.025), xlab = 'Ozone (ppb)', ylab = 'Probability', main = 'Histogram of Ozone Pollution Data with Normal Density Curve')
+curve(dnorm(x, mean = mean.ozone, sd = sd.ozone), add = T)
+dev.off()

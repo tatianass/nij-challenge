@@ -1,6 +1,0 @@
-                Df    Sum Sq   Mean Sq F value   Pr(>F)    
-CATEGORY         3 1.365e+17 4.551e+16   24.05 1.48e-15 ***
-Residuals   347871 6.583e+20 1.892e+15                     
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-528389 observations deleted due to missingness
