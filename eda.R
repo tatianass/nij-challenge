@@ -168,3 +168,18 @@ ozone.ylim.normal = range(0, ozone.histogram$density, dnorm(ozone, mean = mean.o
 hist(ozone, breaks = 15, freq = F, ylim = c(0, 0.025), xlab = 'Ozone (ppb)', ylab = 'Probability', main = 'Histogram of Ozone Pollution Data with Normal Density Curve')
 curve(dnorm(x, mean = mean.ozone, sd = sd.ozone), add = T)
 dev.off()
+
+
+## https://onlinecourses.science.psu.edu/stat857/node/4
+# Scatterplot: Wage vs. Age by race
+
+if(!require(ISLR)){
+  install.packages("ISLR")
+}
+library(ISLR)
+
+with(Wage, plot(age, wage, col = c("lightgreen","navy", "mediumvioletred", 
+                                   "red")[race], pch = 19, cex=0.6))
+legend(70, 310, legend=levels(Wage$race), col=c("lightgreen","navy", 
+                                                "mediumvioletred", "red"), bty="n", cex=0.7, pch=19)
+title(main = "Relationship between Age and Wage by Race")
