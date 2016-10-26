@@ -155,7 +155,7 @@ hist(ozone, breaks = 15, freq = F, xlab = 'Ozone (ppb)', ylim = c(0, 0.025), yla
 lines(density(ozone, na.rm = T, from = 0, to = max.ozone))
 dev.off()
 
-# histogram with normal density curve
+# histogram with gamma density curve
 png('analyse/histogram and gamma density plot.png')
 hist(ozone, breaks = 15, freq = F, xlim = c(0, 170), ylim = c(0, 0.025), xlab = 'Ozone (ppb)', ylab = 'Relative Frequency', main = 'Histogram of Ozone Pollution Data with Gamma Density Curve')
 curve(dgamma(x, shape = mean.ozone^2/var.ozone, scale = var.ozone/mean.ozone), add = T)

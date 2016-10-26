@@ -13,11 +13,16 @@ if(!require(scales)){
 if(!require(dplyr)){
   install.packages("dplyr")
 }
+if(!require(plotly)){
+  devtools::install_github("ropensci/plotly")
+}
 library(xlsx)
 library(Cairo)
 library(ggplot2)
 library(scales)
 library(dplyr)
+library(grid)
+library(plotly)
 
 d <- read.csv(file = "data/mp_data.csv", header = T, sep = ";", stringsAsFactors = F)
 
@@ -215,6 +220,149 @@ guides(fill = guide_colorbar(barwidth = 0.5, barheight = 10)) +
 
 dev.off()
 
-## Bivariable Analysis
-# random sample
-#a <- sample_n(data, 1000)
+
+##https://www.r-bloggers.com/exploratory-data-analysis-quantile-quantile-plots-for-new-yorks-district-pollution-data/
+##### Quantile-Quantile Plots of district Pollution Data
+##### By Eric Cai - The Chemical Statistician
+# extract "district" data vector
+graphic <- "analyse/qqplot "
+district = d$DISTRICT
+
+# sample size of "district"
+length(district)
+
+# remove missing values from "district"
+district = district[!is.na(district)]
+
+# having removed missing values, find the number of non-missing values in "district"
+n = length(district)
+
+# calculate mean, variance and standard deviation of "district"
+mean.district = mean(district)
+var.district = var(district)
+sd.district = sd(district)
+max.district = max(district, na.rm = T)
+
+# set n points in the interval (0,1)
+# use the formula k/(n+1), for k = 1,..,n
+# this is a vector of the n probabilities
+probabilities = (1:n)/(n+1)
+
+# calculate normal quantiles using mean and standard deviation from "district"
+normal.quantiles = qnorm(probabilities, mean(district, na.rm = T), sd(district, na.rm = T))
+
+# normal quantile-quantile plot for "district"
+name <- paste(graphic, "normal ", dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*2, 
+      height=4*2, 
+      pointsize=12*2, 
+      dpi=144)
+
+plot(sort(normal.quantiles), sort(district) , xlab = 'Theoretical Quantiles from Normal Distribution', ylab = 'Sample Quqnatiles of district', main = 'Normal Quantile-Quantile Plot of district')
+abline(0,1)
+
+dev.off()
+
+# calculate gamma quantiles using mean and standard deviation from "district" to calculate shape and scale parameters
+gamma.quantiles = qgamma(probabilities, shape = mean.district^2/var.district, scale = var.district/mean.district)
+
+
+# gamma quantile-quantile plot for "district"
+name <- paste(graphic, "gamma ",dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*2, 
+      height=4*2, 
+      pointsize=12*2, 
+      dpi=144)
+
+plot(sort(gamma.quantiles), sort(district), xlab = 'Theoretical Quantiles from Gamma Distribution', ylab = 'Sample Quantiles of district', main = 'Gamma Quantile-Quantile Plot of district')
+abline(0,1)
+
+dev.off()
+
+graphic <- "analyse/histogram "
+# histogram with kernel density estimate
+name <- paste(graphic, "kernel density ",dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*2, 
+      height=4*2, 
+      pointsize=12*2, 
+      dpi=144)
+
+hist(district, breaks = 15, freq = F, xlab = 'district (ppb)', ylim = c(0, 0.025), ylab = 'Probability', main = 'Histogram of district Pollution Data with Kernel Density Plot')
+lines(density(district, na.rm = T, from = 0, to = max.district))
+
+dev.off()
+
+# histogram with gamma density curve
+name <- paste(graphic, "gamma density ",dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*2, 
+      height=4*2, 
+      pointsize=12*2, 
+      dpi=144)
+
+hist(district, breaks = 15, freq = F, xlim = c(0, 170), ylim = c(0, 0.025), xlab = 'district (ppb)', ylab = 'Relative Frequency', main = 'Histogram of district Pollution Data with Gamma Density Curve')
+curve(dgamma(x, shape = mean.district^2/var.district, scale = var.district/mean.district), add = T)
+
+dev.off()
+
+# histogram with normal density curve
+name <- paste(graphic, "normal density ",dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*2, 
+      height=4*2, 
+      pointsize=12*2, 
+      dpi=144)
+
+district.histogram = hist(district, breaks = 50, freq = F)
+district.ylim.normal = range(0, district.histogram$density, dnorm(district, mean = mean.district, sd = sd.district), na.rm = T)
+hist(district, breaks = 15, freq = F, ylim = c(0, 0.025), xlab = 'district (ppb)', ylab = 'Probability', main = 'Histogram of district Pollution Data with Normal Density Curve')
+curve(dnorm(x, mean = mean.district, sd = sd.district), add = T)
+
+dev.off()
+
+### Bivariable Analysis
+## histogram 
+# district
+g <- ggplot(d, aes(DISTRICT)) 
+  
+g +  geom_histogram(aes(y=..density.., fill = CATEGORY), binwidth = 10) +
+  labs(x = "District", y = "Density", fill = "CATEGORY")
+
+g +  geom_histogram(aes(y=..density.., fill = final_case_type), binwidth = 10) +
+  labs(x = "District", y = "Density", fill = "Final Case Type")
+
+# date
+#date to numeric
+data$occ_date <- as.numeric(data$occ_date)
+
+# removing na's
+data <- na.omit(data)
+
+# using geom_bar will automatically make a new "count" column
+# available in an internal, transformed data frame. the help
+# for geom_bar says as much
+p <- ggplot(d, aes(occ_date)) +
+  scale_y_continuous(labels=percent) +
+  theme(legend.position="none")
+
+p1 <- p + geom_bar(aes(y = ..density.., fill = CATEGORY), stat="density") +
+  labs(x = "Date" ,y = "Percent", fill="Category")
+
+p2 <- p + geom_bar(aes(y = ..density.., fill = as.character(DISTRICT)), stat="density") +
+  labs(x = "Date" ,y = "Percent", fill="District")
+
+p3 <- p + geom_bar(aes(y = ..density.., fill = final_case_type), stat="density") +
+  labs(x = "Date" ,y = "Percent", fill="District")
