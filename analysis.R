@@ -143,10 +143,21 @@ ggplot(data, aes(as.character(census_tract))) +
 
 dev.off()
 
-## looking if census_tract has something to do with crime's location (analysing with arcgis)
-# getting data from 2016 and census_tract = 980000
-ct_980000_dt_2016 <- subset(data, census_tract == 980000 & strftime(occ_date, format = "%Y") == 2016)
-ct_10600_dt_2016 <- subset(data, census_tract == 10600 & strftime(occ_date, format = "%Y") == 2016)
+## Bivariable Analysis
+# random sample
+#a <- sample_n(data, 1000)
+a <- data
+a$occ_date <- as.numeric(strftime(a$occ_date, format = "%Y"))
+p <- ggplot(a, aes(census_tract, CALL.GROUPS))
+p + geom_point()
+p + geom_point(aes(colour = CATEGORY))
+p + geom_point(alpha = 1/10)
 
-write.xlsx(ct_980000_dt_2016, "data/ct_980000_dt_2016.xlsx") 
-write.xlsx(ct_10600_dt_2016, "data/ct_10600_dt_2016.xlsx") 
+a <- filter(a, census_tract < 10000)
+nrow(a)/nrow(data)
+p <- ggplot(a, aes(CALL.GROUPS, census_tract))
+p + geom_boxplot()
+
+write.xlsx(a, file = "data/ct_m_10000.xlsx")
+a <- distinct(data, census_tract, .keep_all = TRUE)
+write.xlsx(a, file = "data/cts.xlsx")
