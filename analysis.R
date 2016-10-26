@@ -19,13 +19,15 @@ library(ggplot2)
 library(scales)
 library(dplyr)
 
-data <- read.csv(file = "data/data.csv", header = T, sep = ";", stringsAsFactors = F)
+d <- read.csv(file = "data/mp_data.csv", header = T, sep = ";", stringsAsFactors = F)
+
+data <- d
+
+# convert character to date
+data$occ_date <- as.POSIXct(data$occ_date, format="%d/%m/%Y")
 
 # removing na's
 data <- na.omit(data)
-
-# convert character to date
-data$occ_date <- as.POSIXct(data$occ_date, format="%m/%d/%Y")
 
 # see general aspects of the data
 str(data)
@@ -54,6 +56,7 @@ call <- "call.png"
 final <- "final.png"
 case <- "case.png"
 census <- "census.png"
+dt <- "district.png"
 
 # Cairo package
 # http://gforge.se/2013/02/exporting-nice-plots-in-r/
@@ -143,23 +146,75 @@ ggplot(data, aes(as.character(census_tract))) +
 
 dev.off()
 
+name <- paste(graphic, dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*14, 
+      height=4*14, 
+      pointsize=12*10, 
+      dpi=144)
+
+# sorting by attribute
+data <- arrange(data, as.character(DISTRICT), final_case_type)
+
+ggplot(data, aes(as.character(DISTRICT))) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = as.character(DISTRICT)), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "District" ,y = "Percent", fill="District") +
+  scale_y_continuous(labels=percent)
+
+dev.off()
+
+## District Density Analysis
+# get district's name and coordinates
+graphic <- "analyse/geom_density2d "
+
+districts <- distinct(data, DISTRICT, .keep_all = TRUE)
+
+# calculate percentage
+get_perc <- data %>%
+  group_by(DISTRICT) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n)) %>%
+  mutate(perc = freq*100)
+
+# join district with percentage
+districts <- inner_join(districts, get_perc, by = "DISTRICT")
+districts <-   select(districts, DISTRICT, x_coordinate, y_coordinate, perc)
+
+# normalize coordinates
+districts$x_coordinate <- districts$x_coordinate/100000
+districts$y_coordinate <- districts$y_coordinate/100000
+
+districts2 <- with(districts, districts[rep(1:nrow(districts), perc),])
+
+# density's colors
+colfunc <- colorRampPalette(c("darkblue", "lightblue", "green", "yellow", "red"))
+
+name <- paste(graphic, dt)
+Cairo(file=name, 
+      type="png",
+      units="in", 
+      width=5*2, 
+      height=4*2, 
+      pointsize=12*2, 
+      dpi=144)
+
+ggplot(districts2, aes(x_coordinate, y_coordinate)) +
+  stat_density2d(geom="tile", aes(fill = ..density..), contour = FALSE) +
+  scale_fill_gradientn(colours=colfunc(400)) + 
+  xlim(c(min(districts$x_coordinate), max(districts$x_coordinate))) + ylim(c(min(districts$y_coordinate), max(districts$y_coordinate))) +
+  geom_density2d(colour="black", bins=10) +
+  geom_point() + 
+  geom_text(aes(label=DISTRICT), size=3, hjust=-.25, vjust=.75) +
+  labs(x = "x", y = "y", fill = "Density")
+guides(fill = guide_colorbar(barwidth = 0.5, barheight = 10)) +
+  theme(legend.title=element_blank())
+
+dev.off()
+
 ## Bivariable Analysis
 # random sample
 #a <- sample_n(data, 1000)
-a <- data
-a$occ_date <- as.numeric(strftime(a$occ_date, format = "%Y"))
-p <- ggplot(a, aes(census_tract, CALL.GROUPS))
-p + geom_point()
-p + geom_point(aes(colour = CATEGORY))
-p + geom_point(alpha = 1/10)
-
-a <- filter(a, census_tract < 10000)
-nrow(a)/nrow(data)
-p <- ggplot(a, aes(CALL.GROUPS, census_tract))
-p + geom_boxplot()
-
-write.xlsx(a, file = "data/ct_m_10000.xlsx")
-a <- distinct(data, census_tract, .keep_all = TRUE)
-write.xlsx(a, file = "data/cts.xlsx")
-
-?hist(data, )

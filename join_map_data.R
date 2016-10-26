@@ -5,4 +5,4 @@ d2 <- read.csv(file = "data/join_ct_on_map.csv", header = T, sep = ";", stringsA
 
 data <- inner_join(data, d2, by = "census_tract")
 
-write.csv(data, file = "data/mp_data.csv", quote = F, sep = ";", fileEncoding = "UTF-8")
+write.table(data, "data/mp_data.csv", quote = F, row.names = F, sep=";", fileEncoding = "UTF-8")
