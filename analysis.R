@@ -161,3 +161,5 @@ p + geom_boxplot()
 write.xlsx(a, file = "data/ct_m_10000.xlsx")
 a <- distinct(data, census_tract, .keep_all = TRUE)
 write.xlsx(a, file = "data/cts.xlsx")
+
+?hist(data, )
