@@ -14,7 +14,7 @@ if(!require(dplyr)){
   install.packages("dplyr")
 }
 if(!require(plotly)){
-  devtools::install_github("ropensci/plotly")
+  install.packages("plotly")
 }
 library(xlsx)
 library(Cairo)
@@ -354,7 +354,7 @@ data <- na.omit(data)
 # using geom_bar will automatically make a new "count" column
 # available in an internal, transformed data frame. the help
 # for geom_bar says as much
-p <- ggplot(d, aes(occ_date)) +
+p <- ggplot(data, aes(occ_date)) +
   scale_y_continuous(labels=percent) +
   theme(legend.position="none")
 
