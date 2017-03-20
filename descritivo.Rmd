@@ -1,0 +1,245 @@
+---
+title: "descritivo.Rmd"
+author: "Tatiana Saturno da Silva"
+date: "26 de outubro de 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if(!require(plotly)){
+  install.packages("plotly", dependencies = T)
+}
+if(!require(Cairo)){
+  install.packages('Cairo')
+}
+if(!require(ggplot2)){
+  install.packages("ggplot2", dependencies = T)
+}
+if(!require(dplyr)){
+  install.packages("dplyr", dependencies = T)
+}
+if(!require(grid)){
+  install.packages("grid", dependencies = T)
+}
+if(!require(tidyr)){
+  install.packages("tidyr", dependencies = T)
+}
+library(Cairo)
+library(ggplot2)
+library(scales)
+library(dplyr)
+library(grid)
+library(plotly)
+library(tidyr)
+theme_set(theme_bw())
+```
+
+## R Markdown
+
+Exploratory Data Analysis for the Crime Forecasting Challenge
+
+## Import Data
+```{r import}
+d <- read.csv(file = "data/mp_data.csv", header = T, sep = ";", stringsAsFactors = F)
+
+data <- d
+
+# convert character to date
+data$occ_date <- as.POSIXct(data$occ_date, format="%d/%m/%Y")
+
+# removing na's
+data <- na.omit(data)
+```
+
+## Brief Data Description
+```{r description, echo=FALSE}
+# see general aspects of the data
+str(data)
+
+# view top few records of data
+head(data)
+
+# Five Numbersummary & interqurtile range
+# Returns Tukey's five number summary (minimum, lower-hinge, median, upper-hinge, maximum) for the input data.
+fivenum(data$census_trac)
+
+# data's summary
+summary(data)
+
+# uniques
+unique(data$CATEGORY)
+unique(data$CALL.GROUPS)
+unique(data$final_case_type)
+unique(data$CASE.DESC)
+unique(data$census_tract)
+```
+
+## Including Plots
+
+Category's percentage:
+
+```{r category_percentage, echo=FALSE}
+p <-ggplot(data, aes(CATEGORY)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = CATEGORY), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Category" ,y = "Percent", fill="Category") +
+  scale_y_continuous(labels=percent)+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+
+Call description's percentage:
+
+```{r call_percentage, echo=FALSE}
+p <-ggplot(data, aes(CALL.GROUPS)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = CALL.GROUPS), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Call Groups" ,y = "Percent", fill="Call Groups") +
+  scale_y_continuous(labels=percent) +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+Final case type's percentage:
+
+```{r final_percentage, echo=FALSE}
+p <-ggplot(data, aes(final_case_type)) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = final_case_type), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Final Case" ,y = "Percent", fill="Final Case") +
+  scale_y_continuous(labels=percent)+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+Census tract's percentage:
+
+```{r census_percentage, echo=FALSE}
+p <-ggplot(data, aes(as.character(census_tract))) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = as.character(census_tract)), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Census Tract" ,y = "Percent", fill="Census Tract") +
+  scale_y_continuous(labels=percent) +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+District's percentage:
+
+```{r district_percentage, echo=FALSE}
+p <-ggplot(data, aes(as.character(DISTRICT))) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = as.character(DISTRICT)), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "District" ,y = "Percent", fill="District") +
+  scale_y_continuous(labels=percent) +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+Date's percentage:
+
+```{r date_percentage, echo=FALSE}
+p <-ggplot(data, aes(strftime(occ_date, format = "%Y"))) +
+  geom_bar(aes(y = (..count..)/sum(..count..), fill = strftime(occ_date, format = "%Y")), stat="count") +
+  geom_text(aes( label = scales::percent((..count..)/sum(..count..)),
+                 y= (..count..)/sum(..count..) ), stat= "count", vjust = -.5) +
+  labs(x = "Date" ,y = "Percent", fill="Date") +
+  scale_y_continuous(labels=percent) +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+
+## Multivariate Analysis
+District Density Analysis:
+
+```{r bivariable, echo=FALSE}
+districts <- distinct(data, DISTRICT, .keep_all = TRUE)
+
+# calculate percentage
+get_perc <- data %>%
+  group_by(DISTRICT) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n)) %>%
+  mutate(perc = freq*100)
+
+# join district with percentage
+districts <- inner_join(districts, get_perc, by = "DISTRICT")
+districts <-   select(districts, DISTRICT, x_coordinate, y_coordinate, perc)
+
+# normalize coordinates
+districts$x_coordinate <- districts$x_coordinate/100000
+districts$y_coordinate <- districts$y_coordinate/100000
+
+districts2 <- with(districts, districts[rep(1:nrow(districts), perc),])
+
+# density's colors
+colfunc <- colorRampPalette(c("darkblue", "lightblue", "green", "yellow", "red"))
+
+p<-ggplot(districts2, aes(x_coordinate, y_coordinate)) +
+  stat_density2d(geom="tile", aes(fill = ..density..), contour = FALSE) +
+  scale_fill_gradientn(colours=colfunc(400)) + 
+  xlim(c(min(districts$x_coordinate), max(districts$x_coordinate))) + ylim(c(min(districts$y_coordinate), max(districts$y_coordinate))) +
+  geom_density2d(colour="black", bins=10) +
+  geom_point() + 
+  geom_text(aes(label=DISTRICT), size=3, hjust=-.25, vjust=.75) +
+  labs(x = "x", y = "y", fill = "Density")
+guides(fill = guide_colorbar(barwidth = 0.5, barheight = 10)) +
+  theme(legend.title=element_blank())+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly()
+```
+
+## District histrogram's density
+
+District vs Category:
+```{r districtXcategory_hist_den, echo=FALSE}
+g <- ggplot(d, aes(DISTRICT)) 
+  
+g1 <- g +  geom_histogram(aes(y=..density.., fill = CATEGORY), binwidth = 10) +
+  labs(x = "District", y = "Density", fill = "CATEGORY")+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly(g1)
+```
+
+District vs Final Case Type:
+```{r districtXfinal_hist_den, echo=FALSE}
+g2 <- g +  geom_histogram(aes(y=..density.., fill = final_case_type), binwidth = 10) +
+  labs(x = "District", y = "Density", fill = "Final Case Type")+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+ggplotly(g2)
+```
+
+## Date histrogram's density
+
+Load data:
+```{r load_data, echo=FALSE}
+#date to numeric
+data$occ_date <- as.numeric(data$occ_date)
+
+# removing na's
+data <- na.omit(data)
+```
+
+Date vs Category:
+```{r density_dateXcategory, echo=FALSE}
+p <- ggplot(data, aes(occ_date)) +
+  scale_y_continuous(labels=percent) +
+  theme(legend.position="none")
+
+p1 <- p + geom_bar(aes(y = ..density.., fill = CATEGORY), stat="density") +
+  labs(x = "Date" ,y = "Density", fill="Category")+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+
+ggplotly(p1)
+```
+
+Date vs District:
+```{r density_dateXdistrict, echo=FALSE}
+p2 <- p + geom_bar(aes(y = ..density.., fill = as.character(DISTRICT)), stat="density") +
+  labs(x = "Date" ,y = "Density", fill="District")+
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+
+ggplotly(p2)
+```
